@@ -1,0 +1,39 @@
+import crypto from "crypto";
+import fetch from "node-fetch";
+
+const META_URL = "https://graph.facebook.com/v24.0/813835741312840/events";
+const ACCESS_TOKEN = "https://graph.facebook.com/v24.0/813835741312840/events?access_token=EAAQhx9XAvpUBPyUE8UU687nRIu99wwNxehI9VpuXp88KuFP10mTsXMKMZBjeVS6cPE5ZBDgLw8FUfFjkouVCJJSL9q6187qpARewfmSrjt9XQNeTejNR2ZBZCkPlcO46q8S2fGl7byB4WIVSzDwQdGw7T0S7LHvYEVApsrjZC4d9gJJO4wGOj4K9JZAgJOqbUNZAQZDZD";
+
+function hash(value) {
+  return crypto.createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
+}
+
+export async function enviarLeadParaMeta(lead) {
+  const payload = {
+    data: [
+      {
+        action_source: "system_generated",
+        event_name: "Lead",
+        event_time: Math.floor(Date.now() / 1000),
+        custom_data: {
+          event_source: "crm",
+          lead_event_source: "Bitrix24"
+        },
+        user_data: {
+          em: [hash(lead.EMAIL)],
+          ph: [hash(lead.PHONE)],
+          lead_id: lead.ID
+        }
+      }
+    ]
+  };
+
+  const response = await fetch(`${META_URL}?access_token=${ACCESS_TOKEN}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+  console.log("Meta response:", result);
+}
